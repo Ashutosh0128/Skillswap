@@ -1,0 +1,283 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Admin Dashboard - SkillSwap{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="animate-fade-in">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="display-5 fw-bold">Admin Dashboard</h1>
+            <div class="text-muted">{{ now|date:"F j, Y, g:i a" }}</div>
+        </div>
+        
+        <!-- Stats Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">Total Users</h6>
+                                <h2 class="mb-0">{{ total_users }}</h2>
+                                <small>+{{ new_users_today }} today</small>
+                            </div>
+                            <i class="fas fa-users fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">Active Sessions</h6>
+                                <h2 class="mb-0">{{ total_sessions }}</h2>
+                                <small>{{ completed_sessions }} completed</small>
+                            </div>
+                            <i class="fas fa-calendar-check fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card bg-warning text-dark">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">Total Revenue</h6>
+                                <h2 class="mb-0">₹{{ total_revenue|floatformat:0 }}</h2>
+                                <small>Fees: ₹{{ platform_fees|floatformat:0 }}</small>
+                            </div>
+                            <i class="fas fa-rupee-sign fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">Active Teachers</h6>
+                                <h2 class="mb-0">{{ total_teachers }}</h2>
+                                <small>{{ total_learners }} learners</small>
+                            </div>
+                            <i class="fas fa-chalkboard-teacher fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Charts Row -->
+        <div class="row mb-4">
+            <div class="col-md-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Last 7 Days Activity</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="activityChart" height="250"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Age Demographics</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="ageChart" height="250"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Popular Skills & Locations -->
+        <div class="row mb-4">
+            <div class="col-md-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-trophy me-2"></i>Most Popular Skills</h5>
+                    </div>
+                    <div class="card-body">
+                        {% for skill in popular_skills %}
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>{{ skill.name }}</span>
+                                    <span class="badge bg-primary">{{ skill.session_count }} sessions</span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar" style="width: {% widthratio skill.session_count popular_skills.0.session_count 100 %}%"></div>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <p class="text-muted">No data available</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Top Locations</h5>
+                    </div>
+                    <div class="card-body">
+                        {% for city, count in top_locations.items %}
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>{{ city }}</span>
+                                    <span>{{ count }} users</span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar bg-info" style="width: {% widthratio count top_locations.values|first 100 %}%"></div>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <p class="text-muted">No location data available</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Activities -->
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-user-plus me-2"></i>New Users</h5>
+                    </div>
+                    <div class="card-body">
+                        {% for user in recent_users %}
+                            <div class="mb-2 pb-2 border-bottom">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <strong>{{ user.username }}</strong><br>
+                                        <small class="text-muted">{{ user.date_joined|date:"M d, Y" }}</small>
+                                    </div>
+                                    <a href="{% url 'admin_user_detail' user.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <p class="text-muted">No new users</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Recent Sessions</h5>
+                    </div>
+                    <div class="card-body">
+                        {% for session in recent_sessions %}
+                            <div class="mb-2 pb-2 border-bottom">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <strong>{{ session.skill.name }}</strong><br>
+                                        <small class="text-muted">{{ session.created_at|date:"M d, Y" }}</small>
+                                    </div>
+                                    <span class="badge bg-{% if session.status == 'completed' %}success{% elif session.status == 'pending' %}warning{% else %}danger{% endif %}">
+                                        {{ session.get_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <p class="text-muted">No sessions</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-rupee-sign me-2"></i>Recent Transactions</h5>
+                    </div>
+                    <div class="card-body">
+                        {% for transaction in recent_transactions %}
+                            <div class="mb-2 pb-2 border-bottom">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <strong>{{ transaction.user.username }}</strong><br>
+                                        <small class="text-muted">₹{{ transaction.amount }}</small>
+                                    </div>
+                                    <span class="badge bg-{% if transaction.status == 'completed' %}success{% elif transaction.status == 'pending' %}warning{% else %}danger{% endif %}">
+                                        {{ transaction.get_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <p class="text-muted">No transactions</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Activity Chart
+const ctx1 = document.getElementById('activityChart').getContext('2d');
+const activityData = {{ last_7_days|safe }};
+new Chart(ctx1, {
+    type: 'line',
+    data: {
+        labels: activityData.map(d => d.date),
+        datasets: [
+            {
+                label: 'New Users',
+                data: activityData.map(d => d.users),
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4
+            },
+            {
+                label: 'Sessions',
+                data: activityData.map(d => d.sessions),
+                borderColor: 'rgb(16, 185, 129)',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                tension: 0.4
+            },
+            {
+                label: 'Revenue (₹)',
+                data: activityData.map(d => d.revenue),
+                borderColor: 'rgb(245, 158, 11)',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                tension: 0.4
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'top' }
+        }
+    }
+});
+
+// Age Chart
+const ctx2 = document.getElementById('ageChart').getContext('2d');
+new Chart(ctx2, {
+    type: 'doughnut',
+    data: {
+        labels: ['18-25', '26-35', '36-50', '50+', 'Unknown'],
+        datasets: [{
+            data: [{{ age_groups.18-25 }}, {{ age_groups.26-35 }}, {{ age_groups.36-50 }}, {{ age_groups.50+ }}, {{ age_groups.Unknown }}],
+            backgroundColor: ['rgb(59, 130, 246)', 'rgb(16, 185, 129)', 'rgb(245, 158, 11)', 'rgb(239, 68, 68)', 'rgb(107, 114, 128)']
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
+</script>
+{% endblock %}

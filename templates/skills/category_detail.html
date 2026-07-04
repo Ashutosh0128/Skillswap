@@ -1,0 +1,38 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ category.name }} - SkillSwap{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="animate-fade-in">
+        <div class="mb-4">
+            <h1 class="display-5 fw-bold">{{ category.name }}</h1>
+            <p class="lead">{{ category.description }}</p>
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>{{ active_offers }} active offers available in this category
+            </div>
+        </div>
+        
+        <div class="row">
+            {% for skill in skills %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ skill.name }}</h5>
+                            <p class="card-text text-muted small">{{ skill.description|truncatewords:20 }}</p>
+                            <span class="badge bg-{% if skill.difficulty == 'beginner' %}success{% elif skill.difficulty == 'intermediate' %}warning{% else %}danger{% endif %} mb-2">
+                                {{ skill.get_difficulty_display }}
+                            </span>
+                            <a href="{% url 'skill-detail' skill.id %}" class="btn btn-primary w-100 mt-3">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info text-center">No skills in this category yet.</div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

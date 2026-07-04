@@ -1,0 +1,51 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Inbox - SkillSwap{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="animate-fade-in">
+        <h1 class="display-5 fw-bold mb-4">Messages</h1>
+        
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Conversations</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        {% for user in conversations %}
+                            <a href="{% url 'conversation' user.id %}" class="list-group-item list-group-item-action">
+                                <div class="d-flex align-items-center">
+                                    {% if user.profile.avatar %}
+                                        <img src="{{ user.profile.avatar.url }}" class="rounded-circle me-2" width="40" height="40">
+                                    {% else %}
+                                        <i class="fas fa-user-circle fa-2x me-2"></i>
+                                    {% endif %}
+                                    <div>
+                                        <strong>{{ user.username }}</strong><br>
+                                        <small class="text-muted">Click to chat</small>
+                                    </div>
+                                </div>
+                            </a>
+                        {% empty %}
+                            <div class="list-group-item text-center text-muted">
+                                No conversations yet
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body text-center text-muted py-5">
+                        <i class="fas fa-comment-dots fa-4x mb-3"></i>
+                        <p>Select a conversation to start messaging</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,178 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Home - Learn & Teach Skills{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section animate-fade-in">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <h1 class="display-4 fw-bold mb-4">Learn Anything,<br>Teach Everything</h1>
+                <p class="lead mb-4">Join our peer-to-peer skill-sharing platform. Connect with experts, learn new skills, and share your knowledge with the world.</p>
+                {% if not user.is_authenticated %}
+                    <div class="d-flex gap-3">
+                        <a href="{% url 'users:register' %}" class="btn btn-light btn-lg">
+                            <i class="fas fa-user-plus me-2"></i>Get Started
+                        </a>
+                        <a href="{% url 'skills:offer_list' %}" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-search me-2"></i>Browse Offers
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="d-flex gap-3">
+                        <a href="{% url 'users:dashboard' %}" class="btn btn-light btn-lg">
+                            <i class="fas fa-chart-line me-2"></i>Go to Dashboard
+                        </a>
+                        <a href="{% url 'skills:offer_create' %}" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-plus-circle me-2"></i>Create Offer
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="col-lg-6 text-center">
+                <i class="fas fa-users fa-8x"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Statistics Section -->
+    <div class="row text-center mb-5">
+        <div class="col-md-3 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                    <h3 class="fw-bold">{{ total_users|default:"0" }}+</h3>
+                    <p class="text-muted">Active Learners</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <i class="fas fa-graduation-cap fa-3x text-success mb-3"></i>
+                    <h3 class="fw-bold">{{ total_skills|default:"0" }}+</h3>
+                    <p class="text-muted">Skills Available</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <i class="fas fa-tags fa-3x text-warning mb-3"></i>
+                    <h3 class="fw-bold">{{ total_offers|default:"0" }}+</h3>
+                    <p class="text-muted">Active Offers</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <i class="fas fa-calendar-check fa-3x text-info mb-3"></i>
+                    <h3 class="fw-bold">{{ total_sessions|default:"0" }}+</h3>
+                    <p class="text-muted">Completed Sessions</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Offers -->
+    <div class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold">Recent Skill Offers</h2>
+            <a href="{% url 'skills:offer_list' %}" class="btn btn-outline-primary">View All <i class="fas fa-arrow-right ms-2"></i></a>
+        </div>
+        <div class="row">
+            {% for offer in recent_offers %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <span class="skill-badge">{{ offer.skill.category.name }}</span>
+                                    <span class="skill-badge bg-secondary">{{ offer.skill.get_difficulty_display }}</span>
+                                </div>
+                                <div class="text-end">
+                                    <h5 class="text-primary mb-0">₹{{ offer.hourly_rate }}/hr</h5>
+                                </div>
+                            </div>
+                            <h5 class="card-title">{{ offer.skill.name }}</h5>
+                            <p class="card-text text-muted small">{{ offer.description|truncatewords:20 }}</p>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div class="d-flex align-items-center">
+                                    {% if offer.teacher.avatar %}
+                                        <img src="{{ offer.teacher.avatar.url }}" class="rounded-circle me-2" width="30" height="30" style="object-fit: cover;">
+                                    {% else %}
+                                        <i class="fas fa-user-circle fa-2x me-2"></i>
+                                    {% endif %}
+                                    <small class="text-muted">{{ offer.teacher.user.username }}</small>
+                                </div>
+                                <div class="rating">
+                                    {% with avg=offer.get_average_rating %}
+                                        {% for i in "12345"|make_list %}
+                                            {% if forloop.counter <= avg %}
+                                                <i class="fas fa-star"></i>
+                                            {% elif forloop.counter|add:"-0.5" <= avg %}
+                                                <i class="fas fa-star-half-alt"></i>
+                                            {% else %}
+                                                <i class="far fa-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <small class="text-muted">({{ avg }})</small>
+                                    {% endwith %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent border-0 pb-3">
+                            <a href="{% url 'skills:offer_detail' offer.id %}" class="btn btn-primary w-100">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle me-2"></i>No offers available yet. Be the first to create an offer!
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="row mt-5 pt-5">
+        <div class="col-12 text-center mb-5">
+            <h2 class="fw-bold">Why Choose SkillSwap?</h2>
+            <p class="text-muted">Discover the benefits of peer-to-peer learning</p>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-chalkboard-teacher fa-3x text-primary mb-3"></i>
+                    <h5 class="fw-bold">Expert Teachers</h5>
+                    <p class="text-muted">Learn from verified experts who are passionate about teaching and sharing their knowledge.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-hand-holding-usd fa-3x text-success mb-3"></i>
+                    <h5 class="fw-bold">Affordable Rates</h5>
+                    <p class="text-muted">Pay only for what you learn. Our platform offers competitive rates for quality education.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-clock fa-3x text-info mb-3"></i>
+                    <h5 class="fw-bold">Flexible Schedule</h5>
+                    <p class="text-muted">Learn at your own pace. Schedule sessions that fit your busy lifestyle.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

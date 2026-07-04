@@ -1,0 +1,41 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Book Session - SkillSwap{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card animate-fade-in">
+                <div class="card-header">
+                    <h3 class="mb-0"><i class="fas fa-calendar-plus me-2"></i>Book Session</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-4">
+                        <h5>Offer Details:</h5>
+                        <p><strong>Skill:</strong> {{ offer.skill.name }}<br>
+                        <strong>Teacher:</strong> {{ offer.teacher.user.username }}<br>
+                        <strong>Rate:</strong> ₹{{ offer.hourly_rate }}/hour</p>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        <div class="alert alert-warning mt-3">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Session cost will be calculated based on duration. Teacher must confirm the session.
+                        </div>
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-check-circle me-2"></i>Book Session
+                            </button>
+                            <a href="{% url 'skills:offer_detail' offer.id %}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

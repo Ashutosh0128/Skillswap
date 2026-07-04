@@ -1,0 +1,197 @@
+{% extends 'base/base.html' %}
+
+{% block title %}User Details - {{ view_user.username }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="animate-fade-in">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="display-5 fw-bold">User Details: {{ view_user.username }}</h1>
+            <div>
+                <a href="{% url 'admin_users' %}" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Users
+                </a>
+                <a href="{% url 'admin_user_toggle_status' view_user.id %}" class="btn btn-{% if view_user.is_active %}danger{% else %}success{% endif %} me-2">
+                    <i class="fas fa-{% if view_user.is_active %}ban{% else %}check{% endif %} me-2"></i>
+                    {% if view_user.is_active %}Deactivate{% else %}Activate{% endif %}
+                </a>
+                <a href="{% url 'admin_user_delete' view_user.id %}" class="btn btn-danger" onclick="return confirm('Are you sure? This action cannot be undone!')">
+                    <i class="fas fa-trash me-2"></i>Delete User
+                </a>
+            </div>
+        </div>
+        
+        <!-- User Profile Card -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        {% if view_user.profile.avatar %}
+                            <img src="{{ view_user.profile.avatar.url }}" class="rounded-circle mb-3" width="150" height="150" style="object-fit: cover;">
+                        {% else %}
+                            <i class="fas fa-user-circle fa-8x mb-3 text-muted"></i>
+                        {% endif %}
+                        <h3>{{ view_user.get_full_name|default:view_user.username }}</h3>
+                        <p class="text-muted">@{{ view_user.username }}</p>
+                        <p><i class="fas fa-envelope me-2"></i>{{ view_user.email }}</p>
+                        {% if view_user.profile.location %}
+                            <p><i class="fas fa-map-marker-alt me-2"></i>{{ view_user.profile.location }}</p>
+                        {% endif %}
+                        <p><i class="fas fa-calendar me-2"></i>Joined: {{ view_user.date_joined|date:"F d, Y" }}</p>
+                        <p><i class="fas fa-star me-2"></i>Rating: {{ view_user.profile.get_average_rating }} ({{ view_user.profile.get_total_reviews }} reviews)</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-8">
+                <!-- Stats Cards -->
+                <div class="row mb-3">
+                    <div class="col-md-3 mb-2">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body text-center">
+                                <h4>{{ teaching_sessions }}</h4>
+                                <small>Teaching Sessions</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <div class="card bg-success text-white">
+                            <div class="card-body text-center">
+                                <h4>{{ learning_sessions }}</h4>
+                                <small>Learning Sessions</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <div class="card bg-warning text-dark">
+                            <div class="card-body text-center">
+                                <h4>₹{{ total_earned|floatformat:0 }}</h4>
+                                <small>Total Earned</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <div class="card bg-info text-white">
+                            <div class="card-body text-center">
+                                <h4>₹{{ total_spent|floatformat:0 }}</h4>
+                                <small>Total Spent</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Bio -->
+                {% if view_user.profile.bio %}
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="fas fa-align-left me-2"></i>Bio</h6>
+                        </div>
+                        <div class="card-body">
+                            <p>{{ view_user.profile.bio }}</p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Active Offers -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-tags me-2"></i>Active Offers ({{ offers.count }})</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr><th>Skill</th><th>Rate</th><th>Status</th><th>Created</th><th>Action</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for offer in offers %}
+                                <tr>
+                                    <td>{{ offer.skill.name }}</td>
+                                    <td>₹{{ offer.hourly_rate }}/hr</td>
+                                    <td><span class="badge bg-success">Active</span></td>
+                                    <td>{{ offer.created_at|date:"M d, Y" }}</td>
+                                    <td><a href="{% url 'offer-detail' offer.id %}" class="btn btn-sm btn-outline-primary">View</a></td>
+                                </tr>
+                            {% empty %}
+                                <td><td colspan="5" class="text-center">No active offers</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Sessions -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-calendar me-2"></i>Recent Sessions</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr><th>Skill</th><th>Role</th><th>Date</th><th>Status</th><th>Action</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for session in sessions %}
+                                <tr>
+                                    <td>{{ session.skill.name }}</td>
+                                    <td>
+                                        {% if session.teacher.user == view_user %}
+                                            Teaching {{ session.learner.user.username }}
+                                        {% else %}
+                                            Learning from {{ session.teacher.user.username }}
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ session.scheduled_date }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if session.status == 'completed' %}success{% elif session.status == 'pending' %}warning{% else %}danger{% endif %}">
+                                            {{ session.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td><a href="{% url 'session-detail' session.id %}" class="btn btn-sm btn-outline-primary">View</a></td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="5" class="text-center">No sessions found</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Reviews Received -->
+        {% if reviews_received %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-star me-2"></i>Reviews Received</h5>
+                </div>
+                <div class="card-body">
+                    {% for review in reviews_received %}
+                        <div class="mb-3 pb-3 border-bottom">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <strong>{{ review.reviewer.user.username }}</strong>
+                                    <div class="rating">
+                                        {% for i in "12345"|make_list %}
+                                            {% if forloop.counter <= review.rating %}
+                                                <i class="fas fa-star text-warning"></i>
+                                            {% else %}
+                                                <i class="far fa-star text-warning"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    <p class="small mt-2">{{ review.comment }}</p>
+                                </div>
+                                <small class="text-muted">{{ review.created_at|date:"M d, Y" }}</small>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

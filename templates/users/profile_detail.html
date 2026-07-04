@@ -1,0 +1,145 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ profile.user.username }}'s Profile - SkillSwap{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row animate-fade-in">
+        <!-- Profile Sidebar -->
+        <div class="col-md-4 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    {% if profile.avatar %}
+                        <img src="{{ profile.avatar.url }}" class="rounded-circle mb-3" width="150" height="150" style="object-fit: cover;">
+                    {% else %}
+                        <i class="fas fa-user-circle fa-8x mb-3 text-muted"></i>
+                    {% endif %}
+                    <h3>{{ profile.user.get_full_name|default:profile.user.username }}</h3>
+                    <p class="text-muted">@{{ profile.user.username }}</p>
+                    
+                    <div class="rating mb-3">
+                        {% for i in "12345"|make_list %}
+                            {% if forloop.counter <= average_rating %}
+                                <i class="fas fa-star text-warning"></i>
+                            {% elif forloop.counter|add:"-0.5" <= average_rating %}
+                                <i class="fas fa-star-half-alt text-warning"></i>
+                            {% else %}
+                                <i class="far fa-star text-warning"></i>
+                            {% endif %}
+                        {% endfor %}
+                        <span class="text-muted">({{ total_reviews }} reviews)</span>
+                    </div>
+                    
+                    {% if profile.location %}
+                        <p><i class="fas fa-map-marker-alt me-2"></i>{{ profile.location }}</p>
+                    {% endif %}
+                    
+                    {% if profile.bio %}
+                        <p class="text-muted">{{ profile.bio }}</p>
+                    {% endif %}
+                    
+                    <div class="d-grid gap-2">
+                        {% if is_owner %}
+                            <a href="{% url 'users:profile_update' profile.id %}" class="btn btn-primary">
+                                <i class="fas fa-edit me-2"></i>Edit Profile
+                            </a>
+                            <a href="{% url 'skills:offer_create' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-plus-circle me-2"></i>Create Offer
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Profile Content -->
+        <div class="col-md-8">
+            <!-- Social Links -->
+            {% if profile.website or profile.linkedin or profile.github %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-link me-2"></i>Connect</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if profile.website %}
+                            <a href="{{ profile.website }}" target="_blank" class="btn btn-outline-secondary me-2">
+                                <i class="fas fa-globe me-1"></i>Website
+                            </a>
+                        {% endif %}
+                        {% if profile.linkedin %}
+                            <a href="{{ profile.linkedin }}" target="_blank" class="btn btn-outline-secondary me-2">
+                                <i class="fab fa-linkedin me-1"></i>LinkedIn
+                            </a>
+                        {% endif %}
+                        {% if profile.github %}
+                            <a href="{{ profile.github }}" target="_blank" class="btn btn-outline-secondary">
+                                <i class="fab fa-github me-1"></i>GitHub
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+            
+            <!-- Active Offers -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-tags me-2"></i>Active Teaching Offers</h5>
+                </div>
+                <div class="card-body">
+                    {% for offer in offers %}
+                        <div class="mb-3 pb-3 border-bottom">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6>{{ offer.skill.name }}</h6>
+                                    <p class="small text-muted">{{ offer.description|truncatewords:15 }}</p>
+                                    <p class="small mb-0">
+                                        <i class="fas fa-rupee-sign me-1"></i>{{ offer.hourly_rate }}/hr
+                                    </p>
+                                </div>
+                                <a href="{% url 'skills:offer_detail' offer.id %}" class="btn btn-sm btn-primary align-self-start">View</a>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p class="text-muted text-center">No active offers.</p>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Reviews -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-star me-2"></i>Reviews ({{ total_reviews }})</h5>
+                </div>
+                <div class="card-body">
+                    {% for review in reviews_received %}
+                        <div class="mb-3 pb-3 border-bottom">
+                            <div class="d-flex">
+                                {% if review.reviewer.avatar %}
+                                    <img src="{{ review.reviewer.avatar.url }}" class="rounded-circle me-3" width="40" height="40" style="object-fit: cover;">
+                                {% else %}
+                                    <i class="fas fa-user-circle fa-2x me-3 text-muted"></i>
+                                {% endif %}
+                                <div>
+                                    <div class="rating mb-1">
+                                        {% for i in "12345"|make_list %}
+                                            {% if forloop.counter <= review.rating %}
+                                                <i class="fas fa-star text-warning"></i>
+                                            {% else %}
+                                                <i class="far fa-star text-warning"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    <p>{{ review.comment }}</p>
+                                    <small class="text-muted">- {{ review.reviewer.user.username }} ({{ review.created_at|date:"M d, Y" }})</small>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p class="text-muted text-center">No reviews yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

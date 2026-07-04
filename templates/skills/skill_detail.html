@@ -1,0 +1,92 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ skill.name }} - SkillSwap{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row animate-fade-in">
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="mb-0">{{ skill.name }}</h2>
+                        <span class="badge bg-{% if skill.difficulty == 'beginner' %}success{% elif skill.difficulty == 'intermediate' %}warning{% else %}danger{% endif %} fs-6">
+                            {{ skill.get_difficulty_display }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <span class="skill-badge">{{ skill.category.name }}</span>
+                    </div>
+                    
+                    <h5>Description</h5>
+                    <p>{{ skill.description|linebreaks }}</p>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="alert alert-info">
+                                <h6><i class="fas fa-tags me-2"></i>Active Offers</h6>
+                                <h3 class="mb-0">{{ total_offers }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="alert alert-success">
+                                <h6><i class="fas fa-calendar-check me-2"></i>Total Sessions</h6>
+                                <h3 class="mb-0">{{ total_sessions }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if user.is_staff %}
+                        <div class="mt-4">
+                            <a href="{% url 'skills:skill-update' skill.id %}" class="btn btn-outline-primary">Edit Skill</a>
+                            <a href="{% url 'skills:skill-delete' skill.id %}" class="btn btn-outline-danger">Delete Skill</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chalkboard-teacher me-2"></i>Available Teachers</h5>
+                </div>
+                <div class="card-body">
+                    {% for offer in offers %}
+                        <div class="mb-3 pb-3 border-bottom">
+                            <div class="d-flex align-items-center mb-2">
+                                {% if offer.teacher.avatar %}
+                                    <img src="{{ offer.teacher.avatar.url }}" class="rounded-circle me-2" width="40" height="40" style="object-fit: cover;">
+                                {% else %}
+                                    <i class="fas fa-user-circle fa-2x me-2"></i>
+                                {% endif %}
+                                <div>
+                                    <strong>{{ offer.teacher.user.username }}</strong>
+                                    <div class="rating small">
+                                        {% with avg=offer.get_average_rating %}
+                                            {% for i in "12345"|make_list %}
+                                                {% if forloop.counter <= avg %}
+                                                    <i class="fas fa-star text-warning"></i>
+                                                {% else %}
+                                                    <i class="far fa-star text-warning"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                            ({{ avg }})
+                                        {% endwith %}
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="small mb-2">₹{{ offer.hourly_rate }}/hour</p>
+                            <a href="{% url 'skills:offer-detail' offer.id %}" class="btn btn-sm btn-primary w-100">View Offer</a>
+                        </div>
+                    {% empty %}
+                        <p class="text-muted text-center">No active offers for this skill.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

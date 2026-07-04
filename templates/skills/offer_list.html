@@ -1,0 +1,136 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Skill Offers - SkillSwap{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="animate-fade-in">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="display-5 fw-bold mb-0">Skill Offers</h1>
+            {% if user.is_authenticated %}
+                <a href="{% url 'skills:offer-create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus-circle me-2"></i>Create Offer
+                </a>
+            {% endif %}
+        </div>
+        
+        <!-- Filters -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <input type="text" name="q" class="form-control" placeholder="Search offers..." value="{{ search_query }}">
+                    </div>
+                    <div class="col-md-3">
+                        <select name="category" class="form-select">
+                            <option value="">All Categories</option>
+                            {% for category in categories %}
+                                <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="number" name="max_price" class="form-control" placeholder="Max Price" value="{{ max_price }}">
+                    </div>
+                    <div class="col-md-2">
+                        <select name="sort" class="form-select">
+                            <option value="-created_at" {% if sort == '-created_at' %}selected{% endif %}>Newest First</option>
+                            <option value="hourly_rate" {% if sort == 'hourly_rate' %}selected{% endif %}>Price: Low to High</option>
+                            <option value="-hourly_rate" {% if sort == '-hourly_rate' %}selected{% endif %}>Price: High to Low</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-filter me-2"></i>Filter
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Offers Grid -->
+        <div class="row">
+            {% for offer in offers %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <span class="skill-badge">{{ offer.skill.category.name }}</span>
+                                    <span class="skill-badge bg-secondary">{{ offer.skill.get_difficulty_display }}</span>
+                                </div>
+                                <h5 class="text-primary mb-0">₹{{ offer.hourly_rate }}/hr</h5>
+                            </div>
+                            <h5 class="card-title">{{ offer.skill.name }}</h5>
+                            <p class="card-text text-muted small">{{ offer.description|truncatewords:20 }}</p>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div class="d-flex align-items-center">
+                                    {% if offer.teacher.avatar %}
+                                        <img src="{{ offer.teacher.avatar.url }}" class="rounded-circle me-2" width="30" height="30" style="object-fit: cover;">
+                                    {% else %}
+                                        <i class="fas fa-user-circle fa-2x me-2"></i>
+                                    {% endif %}
+                                    <small class="text-muted">{{ offer.teacher.user.username }}</small>
+                                </div>
+                                <div class="rating">
+                                    {% with avg=offer.get_average_rating %}
+                                        {% for i in "12345"|make_list %}
+                                            {% if forloop.counter <= avg %}
+                                                <i class="fas fa-star"></i>
+                                            {% elif forloop.counter|add:"-0.5" <= avg %}
+                                                <i class="fas fa-star-half-alt"></i>
+                                            {% else %}
+                                                <i class="far fa-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <small class="text-muted">({{ avg }})</small>
+                                    {% endwith %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent border-0 pb-3">
+                            <a href="{% url 'skills:offer-detail' offer.id %}" class="btn btn-primary w-100">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle me-2"></i>No offers found.
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'skills:offer-create' %}">Create the first offer!</a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if offers.has_other_pages %}
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if offers.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ offers.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if max_price %}&max_price={{ max_price }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">Previous</a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in offers.paginator.page_range %}
+                        <li class="page-item {% if offers.number == num %}active{% endif %}">
+                            <a class="page-link" href="?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if max_price %}&max_price={{ max_price }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endfor %}
+                    
+                    {% if offers.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ offers.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if max_price %}&max_price={{ max_price }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">Next</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

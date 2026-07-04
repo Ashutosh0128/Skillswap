@@ -1,0 +1,105 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Find Teachers - SkillSwap{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="animate-fade-in">
+        <h1 class="display-5 fw-bold mb-4">Find Teachers</h1>
+        
+        <!-- Search Bar -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-10">
+                        <input type="text" name="q" class="form-control" placeholder="Search by name, bio, or location..." value="{{ search_query }}">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-2"></i>Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Teachers Grid -->
+        <div class="row">
+            {% for profile in profiles %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 text-center">
+                        <div class="card-body">
+                            {% if profile.avatar %}
+                                <img src="{{ profile.avatar.url }}" class="rounded-circle mb-3" width="100" height="100" style="object-fit: cover;">
+                            {% else %}
+                                <i class="fas fa-user-circle fa-5x mb-3 text-muted"></i>
+                            {% endif %}
+                            <h5>{{ profile.user.get_full_name|default:profile.user.username }}</h5>
+                            <p class="text-muted small">@{{ profile.user.username }}</p>
+                            
+                            <div class="rating mb-2">
+                                {% with avg=profile.get_average_rating %}
+                                    {% for i in "12345"|make_list %}
+                                        {% if forloop.counter <= avg %}
+                                            <i class="fas fa-star text-warning"></i>
+                                        {% elif forloop.counter|add:"-0.5" <= avg %}
+                                            <i class="fas fa-star-half-alt text-warning"></i>
+                                        {% else %}
+                                            <i class="far fa-star text-warning"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                    <span class="text-muted">({{ profile.get_total_reviews }})</span>
+                                {% endwith %}
+                            </div>
+                            
+                            {% if profile.location %}
+                                <p class="small mb-2"><i class="fas fa-map-marker-alt me-1"></i>{{ profile.location }}</p>
+                            {% endif %}
+                            
+                            {% if profile.bio %}
+                                <p class="small text-muted">{{ profile.bio|truncatewords:15 }}</p>
+                            {% endif %}
+                            
+                            <div class="d-grid gap-2 mt-3">
+                                <a href="{% url 'users:profile_detail' profile.id %}" class="btn btn-primary btn-sm">View Profile</a>
+                                <a href="{% url 'skills:offer_list' %}?teacher={{ profile.id }}" class="btn btn-outline-primary btn-sm">View Offers</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle me-2"></i>No teachers found.
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if profiles.has_other_pages %}
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if profiles.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ profiles.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">Previous</a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in profiles.paginator.page_range %}
+                        <li class="page-item {% if profiles.number == num %}active{% endif %}">
+                            <a class="page-link" href="?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endfor %}
+                    
+                    {% if profiles.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ profiles.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">Next</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

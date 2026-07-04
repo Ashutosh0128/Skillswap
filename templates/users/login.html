@@ -1,0 +1,33 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Login - SkillSwap{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card animate-fade-in">
+                <div class="card-header text-center">
+                    <h3 class="mb-0"><i class="fas fa-sign-in-alt me-2"></i>Welcome Back!</h3>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i>Login
+                            </button>
+                        </div>
+                    </form>
+                    <div class="text-center mt-4">
+                        <p>Don't have an account? <a href="{% url 'users:register' %}" class="text-decoration-none">Sign Up</a></p>
+                        <p><a href="{% url 'users:password_reset' %}" class="text-decoration-none">Forgot Password?</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

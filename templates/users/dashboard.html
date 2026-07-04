@@ -1,0 +1,124 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Dashboard - SkillSwap{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="animate-fade-in">
+        <h1 class="display-5 fw-bold mb-4">Welcome back, {{ user.username }}!</h1>
+        
+        <!-- Stats Cards -->
+        <div class="row mb-5">
+            <div class="col-md-3 mb-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <i class="fas fa-chalkboard-teacher fa-2x mb-2"></i>
+                        <h2 class="mb-0">{{ total_teaching }}</h2>
+                        <p class="mb-0">Teaching Sessions</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <i class="fas fa-user-graduate fa-2x mb-2"></i>
+                        <h2 class="mb-0">{{ total_learning }}</h2>
+                        <p class="mb-0">Learning Sessions</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <i class="fas fa-check-circle fa-2x mb-2"></i>
+                        <h2 class="mb-0">{{ completed_sessions }}</h2>
+                        <p class="mb-0">Completed</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <i class="fas fa-star fa-2x mb-2"></i>
+                        <h2 class="mb-0">{{ average_rating|default:"0" }}</h2>
+                        <p class="mb-0">Avg Rating</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Upcoming Sessions -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Upcoming Sessions</h5>
+                    </div>
+                    <div class="card-body">
+                        {% for session in upcoming_sessions %}
+                            <div class="mb-3 pb-3 border-bottom">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">{{ session.skill.name }}</h6>
+                                        <p class="small text-muted mb-0">
+                                            <i class="fas fa-user me-1"></i>
+                                            {% if session.teacher.user == user %}
+                                                Teaching: {{ session.learner.user.username }}
+                                            {% else %}
+                                                Learning from: {{ session.teacher.user.username }}
+                                            {% endif %}
+                                        </p>
+                                        <p class="small text-muted mb-0">
+                                            <i class="fas fa-calendar me-1"></i>{{ session.scheduled_date }}
+                                            <i class="fas fa-clock ms-2 me-1"></i>{{ session.scheduled_time }}
+                                        </p>
+                                    </div>
+                                    <span class="badge bg-{% if session.status == 'pending' %}warning{% elif session.status == 'confirmed' %}success{% else %}secondary{% endif %}">
+                                        {{ session.get_status_display }}
+                                    </span>
+                                </div>
+                                <a href="{% url 'skills:session_detail' session.id %}" class="btn btn-sm btn-outline-primary mt-2">View Details</a>
+                            </div>
+                        {% empty %}
+                            <p class="text-muted text-center">No upcoming sessions.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Offers -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-tags me-2"></i>Your Active Offers</h5>
+                        <a href="{% url 'skills:offer_create' %}" class="btn btn-sm btn-primary">+ New Offer</a>
+                    </div>
+                    <div class="card-body">
+                        {% for offer in active_offers %}
+                            <div class="mb-3 pb-3 border-bottom">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6 class="mb-1">{{ offer.skill.name }}</h6>
+                                        <p class="small text-muted mb-0">
+                                            <i class="fas fa-rupee-sign me-1"></i>{{ offer.hourly_rate }}/hr
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <span class="badge bg-success">Active</span>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <a href="{% url 'skills:offer_detail' offer.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                                    <a href="{% url 'skills:offer_update' offer.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <p class="text-muted text-center">No active offers. <a href="{% url 'skills:offer_create' %}">Create one now!</a></p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

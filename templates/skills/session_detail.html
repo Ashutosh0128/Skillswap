@@ -1,0 +1,160 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Session Details - SkillSwap{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row animate-fade-in">
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="mb-0">Session Details</h3>
+                        <span class="badge bg-{% if session.status == 'pending' %}warning{% elif session.status == 'confirmed' %}success{% elif session.status == 'completed' %}info{% else %}danger{% endif %} fs-6">
+                            {{ session.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-graduation-cap me-2"></i>Skill</h5>
+                            <p>{{ session.skill.name }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-calendar me-2"></i>Date & Time</h5>
+                            <p>{{ session.scheduled_date }} at {{ session.scheduled_time }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-clock me-2"></i>Duration</h5>
+                            <p>{{ session.duration }} minutes</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-rupee-sign me-2"></i>Total Cost</h5>
+                            <p class="h5 text-primary">₹{{ session.get_total_cost }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5><i class="fas fa-chalkboard-teacher me-2"></i>Teacher</h5>
+                        <div class="d-flex align-items-center">
+                            {% if session.teacher.avatar %}
+                                <img src="{{ session.teacher.avatar.url }}" class="rounded-circle me-3" width="50" height="50" style="object-fit: cover;">
+                            {% else %}
+                                <i class="fas fa-user-circle fa-3x me-3"></i>
+                            {% endif %}
+                            <div>
+                                <h6 class="mb-0">{{ session.teacher.user.get_full_name|default:session.teacher.user.username }}</h6>
+                                <small class="text-muted">@{{ session.teacher.user.username }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5><i class="fas fa-user-graduate me-2"></i>Learner</h5>
+                        <div class="d-flex align-items-center">
+                            {% if session.learner.avatar %}
+                                <img src="{{ session.learner.avatar.url }}" class="rounded-circle me-3" width="50" height="50" style="object-fit: cover;">
+                            {% else %}
+                                <i class="fas fa-user-circle fa-3x me-3"></i>
+                            {% endif %}
+                            <div>
+                                <h6 class="mb-0">{{ session.learner.user.get_full_name|default:session.learner.user.username }}</h6>
+                                <small class="text-muted">@{{ session.learner.user.username }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if session.notes %}
+                        <div class="mb-4">
+                            <h5><i class="fas fa-sticky-note me-2"></i>Notes</h5>
+                            <p>{{ session.notes|linebreaks }}</p>
+                        </div>
+                    {% endif %}
+                    
+                    {% if session.ai_summary %}
+                        <div class="alert alert-info">
+                            <h5><i class="fas fa-robot me-2"></i>AI Session Summary</h5>
+                            <p>{{ session.ai_summary }}</p>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Action Buttons -->
+                    <div class="mt-4">
+                        {% if is_teacher and session.status == 'pending' %}
+                            <a href="{% url 'skills:session_update' session.id %}?action=confirm" class="btn btn-success me-2">
+                                <i class="fas fa-check-circle me-2"></i>Confirm Session
+                            </a>
+                            <a href="{% url 'skills:session_update' session.id %}?action=cancel" class="btn btn-danger">
+                                <i class="fas fa-times-circle me-2"></i>Cancel Session
+                            </a>
+                        {% elif is_teacher and session.status == 'confirmed' %}
+                            <a href="{% url 'skills:session_update' session.id %}?action=complete" class="btn btn-primary me-2">
+                                <i class="fas fa-check-double me-2"></i>Mark as Completed
+                            </a>
+                            <a href="{% url 'skills:session_update' session.id %}?action=cancel" class="btn btn-danger">
+                                <i class="fas fa-times-circle me-2"></i>Cancel Session
+                            </a>
+                        {% endif %}
+                        
+                        {% if is_learner and session.status == 'confirmed' %}
+                            <a href="{% url 'skills:session_update' session.id %}?action=cancel" class="btn btn-danger">
+                                <i class="fas fa-times-circle me-2"></i>Cancel Session
+                            </a>
+                        {% endif %}
+                        
+                        {% if session.status == 'completed' and not review and is_learner %}
+                            <a href="{% url 'skills:review_create' session.id %}" class="btn btn-warning">
+                                <i class="fas fa-star me-2"></i>Write a Review
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Session Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-cog me-2"></i>Session Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary" onclick="window.print()">
+                            <i class="fas fa-print me-2"></i>Print Details
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="copySessionLink()">
+                            <i class="fas fa-link me-2"></i>Copy Link
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Video Call (Placeholder) -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-video me-2"></i>Video Call</h5>
+                </div>
+                <div class="card-body text-center">
+                    <i class="fas fa-video fa-4x text-muted mb-3"></i>
+                    <p>Join your session via video call</p>
+                    <button class="btn btn-primary w-100" disabled>
+                        <i class="fas fa-play me-2"></i>Join Call (Coming Soon)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copySessionLink() {
+    navigator.clipboard.writeText(window.location.href);
+    alert('Session link copied to clipboard!');
+}
+</script>
+{% endblock %}

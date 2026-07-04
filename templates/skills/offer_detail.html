@@ -1,0 +1,121 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ offer.skill.name }} - SkillSwap{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row animate-fade-in">
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="mb-0">{{ offer.skill.name }}</h2>
+                        <h4 class="text-primary mb-0">₹{{ offer.hourly_rate }}/hr</h4>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <span class="skill-badge">{{ offer.skill.category.name }}</span>
+                        <span class="skill-badge bg-secondary">{{ offer.skill.get_difficulty_display }}</span>
+                        {% if offer.is_active %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                        {% endif %}
+                    </div>
+                    
+                    <h5>Description</h5>
+                    <p>{{ offer.description|linebreaks }}</p>
+                    
+                    <h5>Availability</h5>
+                    <p><i class="fas fa-calendar-alt me-2"></i>{{ offer.available_days }}</p>
+                    <p><i class="fas fa-clock me-2"></i>{{ offer.available_times }}</p>
+                    
+                    {% if user.is_authenticated and can_book %}
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle me-2"></i>Ready to learn? Book a session with this teacher!
+                        </div>
+                        <a href="{% url 'skills:session_book' offer.id %}" class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-calendar-check me-2"></i>Book a Session
+                        </a>
+                    {% elif user.is_authenticated and not can_book and user.profile != offer.teacher %}
+                        <div class="alert alert-warning mt-3">
+                            <i class="fas fa-exclamation-triangle me-2"></i>You already have an active session with this teacher for this skill.
+                        </div>
+                    {% endif %}
+                    
+                    {% if user == offer.teacher.user %}
+                        <div class="mt-4">
+                            <a href="{% url 'skills:offer_update' offer.id %}" class="btn btn-outline-primary">Edit Offer</a>
+                            <a href="{% url 'skills:offer_delete' offer.id %}" class="btn btn-outline-danger">Delete Offer</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Teacher Info -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chalkboard-teacher me-2"></i>Teacher</h5>
+                </div>
+                <div class="card-body text-center">
+                    {% if offer.teacher.avatar %}
+                        <img src="{{ offer.teacher.avatar.url }}" class="rounded-circle mb-3" width="100" height="100" style="object-fit: cover;">
+                    {% else %}
+                        <i class="fas fa-user-circle fa-5x mb-3 text-muted"></i>
+                    {% endif %}
+                    <h5>{{ offer.teacher.user.get_full_name|default:offer.teacher.user.username }}</h5>
+                    <p class="text-muted">@{{ offer.teacher.user.username }}</p>
+                    
+                    <div class="rating mb-2">
+                        {% for i in "12345"|make_list %}
+                            {% if forloop.counter <= teacher_avg_rating %}
+                                <i class="fas fa-star text-warning"></i>
+                            {% elif forloop.counter|add:"-0.5" <= teacher_avg_rating %}
+                                <i class="fas fa-star-half-alt text-warning"></i>
+                            {% else %}
+                                <i class="far fa-star text-warning"></i>
+                            {% endif %}
+                        {% endfor %}
+                        <span class="text-muted">({{ teacher_reviews.count }} reviews)</span>
+                    </div>
+                    
+                    {% if offer.teacher.location %}
+                        <p><i class="fas fa-map-marker-alt me-2"></i>{{ offer.teacher.location }}</p>
+                    {% endif %}
+                    
+                    <a href="{% url 'users:profile_detail' offer.teacher.id %}" class="btn btn-outline-primary w-100">View Full Profile</a>
+                </div>
+            </div>
+            
+            <!-- Recent Reviews -->
+            {% if teacher_reviews %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-star me-2"></i>Recent Reviews</h5>
+                    </div>
+                    <div class="card-body">
+                        {% for review in teacher_reviews %}
+                            <div class="mb-3 pb-3 border-bottom">
+                                <div class="rating mb-1">
+                                    {% for i in "12345"|make_list %}
+                                        {% if forloop.counter <= review.rating %}
+                                            <i class="fas fa-star text-warning"></i>
+                                        {% else %}
+                                            <i class="far fa-star text-warning"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <p class="small">{{ review.comment|truncatewords:15 }}</p>
+                                <small class="text-muted">- {{ review.reviewer.user.username }}</small>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
